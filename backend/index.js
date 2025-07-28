@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const Stripe = require('stripe')
+const bodyParser = require('body-parser');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -9,7 +10,15 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+
+// ⚠️ 不能在 webhook 路由之前使用 express.json() 否则会破坏 raw body！
+app.use((req, res, next) => {
+    if (req.originalUrl === '/webhook') {
+        next(); // 不处理 webhook 的 body
+    } else {
+        express.json()(req, res, next); // 其他路由照常处理 json
+    }
+});
 
 // 在Stripe设置好产品，然后就会有一个PriceID
 app.get('/checkout', async (req, res) => {
@@ -24,9 +33,9 @@ app.get('/checkout', async (req, res) => {
             ],
             mode: 'payment',
             // 客户支付成功后跳转地URL
-            success_url: 'http://localhost:3000/success',
+            success_url: 'http://localhost:5173/success',
             // 客户取消支付后跳转地URL
-            cancel_url: 'http://localhost:3000/cancel',
+            cancel_url: 'http://localhost:5173/cancel',
         });
         return res.status(200).json(session);
     } catch (error) {
@@ -59,7 +68,7 @@ app.post('/create-payment-intent', async (req, res) => {
 });
 
 // Webhook 处理支付成功事件
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -67,6 +76,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
     } catch (err) {
+        console.error(err);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -75,6 +85,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
         console.log(`Payment succeeded for order: ${paymentIntent.metadata.orderId}`);
         // 在此更新数据库订单状态
     }
+
+    console.log(event.type);
 
     res.json({ received: true });
 });

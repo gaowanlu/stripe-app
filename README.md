@@ -203,3 +203,33 @@ app.get('/checkout', async (req, res) => {
 https://docs.stripe.com/testing?locale=zh-CN Stripe提供了许多可以模拟支付的银行卡号。
 
 支付成功则跳到我们指定的 success_url、点返回则跳到我们指定的cancel_url。
+
+## stripe-cli
+
+在Stripe有各种不同的事件、可能会在后台发生，比如支付可能会被退款，订阅可能会被取消，或者在这个案例中结账会话完成了。
+
+当事件发生时，stripe会通过webhook向您的服务器发送请求。这样你就可以获取事件相关数据并做一些操作。
+
+为了在本地测试webhook，你需要安装 Stripe Cli,它允许向本地代码发送模拟请求。以便在实际部署到生产环境之前，进行测试。
+
+https://docs.stripe.com/stripe-cli#install
+
+可以在线试用 stripe listen --latest
+
+```bash
+# 通过stripecli登录stripe账号
+stripe login
+# 监听stripe事件转发到我们的服务器
+stripe listen -e customer.subscription.updated,customer.subscription.deleted,checkout.session.completed --forward-to http://mfavant.xyz:3001/webhook
+# 然后会给你一个 Webhook Secret
+```
+
+![stripeshell](./docs/stripeshell.jpg)
+
+可以进行一个checkout支付，到成功出发了哪些事件。
+
+## Webhook
+
+验证webhook，需要验证他们确实来自stripe，通过Webhook Secret验证。
+
+
