@@ -1,0 +1,2 @@
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_YOUR_TEST_KEY';
+export default STRIPE_PUBLISHABLE_KEY;
