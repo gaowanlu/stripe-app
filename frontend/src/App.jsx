@@ -8,7 +8,9 @@ import './App.css';
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 function App() {
-  const [amount, setAmount] = useState(10); // 示例金额（单位：分）
+  // 示例金额（单位：分）Stripe以分为单位属于定点数了
+  const [amount, setAmount] = useState(10);
+
   const [currency, setCurrency] = useState('cny');
   const [orderId, setOrderId] = useState('order_123');
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -24,7 +26,7 @@ function App() {
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">订单支付</h1>
         <p className="text-gray-600 mb-6">
-          订单金额: ${amount.toFixed(2)} {currency.toUpperCase()}
+          订单金额: ${(amount / 100).toFixed(2)} {currency.toUpperCase()}
         </p>
         <select
           value={paymentMethod}

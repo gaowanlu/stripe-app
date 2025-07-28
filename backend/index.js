@@ -1,13 +1,38 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const Stripe = require('stripe')
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// 在Stripe设置好产品，然后就会有一个PriceID
+app.get('/checkout', async (req, res) => {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price: 'price_1RprHDFR9hMdzEGvV5rvfjlJ',
+                    quantity: 1
+                },
+            ],
+            mode: 'payment',
+            // 客户支付成功后跳转地URL
+            success_url: 'http://localhost:3000/success',
+            // 客户取消支付后跳转地URL
+            cancel_url: 'http://localhost:3000/cancel',
+        });
+        return res.status(200).json(session);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // 创建 PaymentIntent
 app.post('/create-payment-intent', async (req, res) => {
@@ -21,7 +46,7 @@ app.post('/create-payment-intent', async (req, res) => {
 
         // 创建 PaymentIntent，支持多种支付方式
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount * 100, // Stripe 以分为单位
+            amount: amount,
             currency,
             payment_method_types: paymentMethodTypes, // 动态指定支付方式
             metadata: { orderId }, // 存储订单 ID
