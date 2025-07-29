@@ -6,7 +6,13 @@ export default function CheckoutPage() {
     const handleClick = async () => {
         try {
             setLoading(true)
-            const response = await fetch('http://mfavant.xyz:3001/checkout')
+
+            const response = await fetch('http://mfavant.xyz:3001/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ success_url: window.location.origin + '/success', cancel_url: window.location.origin + '/cancel' }),
+            });
+
             const data = await response.json()
 
             if (data?.url) {

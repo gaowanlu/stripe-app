@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-const CheckoutForm = ({ amount, currency, orderId, paymentMethodTypes }) => {
+const CreatePaymentIntentForm = ({ amount, currency, orderId, paymentMethodTypes }) => {
     const stripe = useStripe();
     const elements = useElements();
     const [error, setError] = useState(null);
@@ -48,6 +48,12 @@ const CheckoutForm = ({ amount, currency, orderId, paymentMethodTypes }) => {
             });
         } else if (paymentMethodTypes.includes('wechat_pay')) {
             result = await stripe.confirmWechatPayPayment(clientSecret, {
+                payment_method_options: {
+                    wechat_pay: {
+                        // Specify 'web' for desktop browsers or 'mobile_web' for mobile browsers
+                        client: 'web',
+                    },
+                },
                 return_url: window.location.href,
             });
         }
@@ -59,6 +65,9 @@ const CheckoutForm = ({ amount, currency, orderId, paymentMethodTypes }) => {
         } else if (result?.paymentIntent?.status === 'succeeded') {
             setSucceeded(true);
             setError(null);
+        }
+        else {
+            setError('支付失败，请稍后再试。');
         }
     };
 
@@ -98,4 +107,4 @@ const CheckoutForm = ({ amount, currency, orderId, paymentMethodTypes }) => {
     );
 };
 
-export default CheckoutForm;
+export default CreatePaymentIntentForm;

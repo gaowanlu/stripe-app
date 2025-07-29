@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import CheckoutForm from '../components/CheckoutForm';
+import CreatePaymentIntentForm from '../components/CreatePaymentIntentForm';
 import STRIPE_PUBLISHABLE_KEY from '../constants/stripe';
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
@@ -37,7 +37,7 @@ function PaymentPage() {
           <option value="wechat_pay">微信支付</option>
         </select>
         <Elements stripe={stripePromise}>
-          <CheckoutForm
+          <CreatePaymentIntentForm
             amount={amount}
             currency={currency}
             orderId={orderId}
